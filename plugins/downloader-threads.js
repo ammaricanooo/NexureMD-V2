@@ -12,8 +12,9 @@ let handler = async (m, { conn, args }) => {
     m.reply(wait);
 
     try {
-        const { data } = await axios.get(`${APIs.ryzumi}/api/downloader/threads?url=${encodeURIComponent(url)}`);
+        let { data } = await axios.get(`${APIs.ammaricano}/api/download/threads?url=${encodeURIComponent(url)}`);
 
+        data = data.result || data;
         // Support both new and old API response shapes
         const images = data.image_urls || data.images || [];
         const videos = data.video_urls || data.videos || [];
