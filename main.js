@@ -1,5 +1,5 @@
-/* If You Copy, Don`t Delete This Credit!!! 
-  Don`t Sell This Script Or I Take Immediately 
+/* If You Copy, Don`t Delete This Credit!!!
+  Don`t Sell This Script Or I Take Immediately
   Yang Jual Script Ini Report/Hangusin Aja Akunnya Atau Pukulin ae orangnya
   Move To Pairing Code
   Buat Yg Nggk muncul Codenya Itu Disebabkan Oleh Banyaknya Plugins
@@ -60,7 +60,7 @@ global.API = (name, path = '/', query = {}, apikeyqueryname) => (name in global.
 const __dirname = global.__dirname(import.meta.url)
 
 global.opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse())
-global.prefix = new RegExp('^[' + (opts['prefix'] || '‎xzXZ/i!#$%+£¢€¥^°=¶∆×÷π√✓©®:;?&.\\-').replace(/[|\\{}()[\]^$+*?.\-\^]/g, '\\$&') + ']')
+global.prefix = new RegExp('^[' + (opts['prefix'] || '/!#$%+£¢€¥^°=¶∆×÷π√✓©®:;?&.\\-').replace(/[|\\{}()[\]^$+*?.\-\^]/g, '\\$&') + ']')
 global.db = new Low(new JSONFile(`database.json`));
 
 global.loadDatabase = async function loadDatabase() {

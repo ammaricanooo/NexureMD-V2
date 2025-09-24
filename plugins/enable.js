@@ -1,13 +1,13 @@
 var handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isROwner }) => {
 	const sections = "List Options :\n✨ | Welcome\n🚫 | Delete\n👁 | Antiviewonce\n🤖 | Self\n🌎 | Public\n🗣️ | Simi\n🔞 | Nsfw\n🌟 | PremNsfwChat\n🔗 | Antilink\n☎ | AntiCall\n🚫 | Antidelete\n📩 | Antispam\n🖼 | Autosticker\n⏏️ | Autolevelup\n🔎 | Detect\n❗ | Restrict\n😐 | Nyimak\n☑️ | Autoread\n💬 | PcOnly\n🏢 | GcOnly\n📷 | SwOnly\n🎌| AnimeUpdate\n";
   const contoh = sections + usedPrefix + "enable self";
-  let isEnable = /true|enable|(turn)?on|1/i.test(command);
+  let isEnable = /true|enable|(turn)?on/i.test(command);
   let chat = global.db.data.chats[m.chat];
   let user = global.db.data.users[m.sender];
   let bot = global.db.data.settings[conn.user.jid] || {};
   let type = (args[0] || '').toLowerCase();
   let isAll = false, isUser = false;
-  
+
   switch (type) {
     case 'welcome':
       if (!m.isGroup) {
@@ -192,6 +192,6 @@ var handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
 
 handler.help = ['enable', 'disable'].map(v => v + 'able <option>');
 handler.tags = ['group', 'owner'];
-handler.command = /^((en|dis)able|(tru|fals)e|(turn)?o(n|ff)|[01])$/i;
+handler.command = /^((en|dis)able|(tru|fals)e|(turn)?o(n|ff))$/i;
 
 export default handler;
