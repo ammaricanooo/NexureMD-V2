@@ -13,7 +13,7 @@ const delay = ms => isNumber(ms) && new Promise(resolve => setTimeout(resolve, m
 
 /**
  * Handle messages upsert
- * @param {import('@whiskeysocket/baileys').BaileysEventMap<unknown>['messages.upsert']} groupsUpdate
+ * @param {import('@whiskeysockets/baileys').BaileysEventMap<unknown>['messages.upsert']} groupsUpdate
  */
 
 export async function handler(chatUpdate) {
@@ -27,7 +27,8 @@ export async function handler(chatUpdate) {
         m = smsg(this, m) || m
         if (!m) return
         m.exp = 0
-        m.limit = false
+        // use number for limit tracking to avoid boolean coercion bugs
+        m.limit = 0
         try {
             // TODO: use loop to insert data instead of this
             if (m.sender.endsWith('@broadcast') || m.sender.endsWith('@newsletter')) return
@@ -36,7 +37,7 @@ export async function handler(chatUpdate) {
                 global.db.data.users[m.sender] = {}
             if (user) {
                 if (!isNumber(user.exp)) user.exp = 0
-                if (!isNumber(user.limit)) user.limit = 250
+                if (!isNumber(user.limit)) user.limit = 25
                 if (!isNumber(user.afk)) user.afk = -1
                 if (!('afkReason' in user)) user.afkReason = ''
                 if (!('banned' in user)) user.banned = false
@@ -45,7 +46,7 @@ export async function handler(chatUpdate) {
                     registered: false,
                     role: 'Free user',
                     exp: 0,
-                    limit: 250,
+                    limit: 25,
                     afk: -1,
                     afkReason: '',
                     banned: false,
@@ -266,10 +267,10 @@ export async function handler(chatUpdate) {
                     fail('private', m, this)
                     continue
                 }
-                // if (plugin.register == true && _user.registered == false) { // Butuh daftar?
-                //     fail('unreg', m, this)
-                //     continue
-                // }
+                if (plugin.register == true && _user.registered == false) { // Butuh daftar?
+                    fail('unreg', m, this)
+                    continue
+                }
                 m.isCommand = true
                 let xp = 'exp' in plugin ? parseInt(plugin.exp) : 17 // XP Earning per command
                 if (xp > 200)
@@ -277,9 +278,16 @@ export async function handler(chatUpdate) {
                     console.log("ngecit -_-");
                 else
                     m.exp += xp
-                if (!isPrems && plugin.limit && global.db.data.users[m.sender].limit < plugin.limit * 1) {
-                    this.reply(m.chat, `[❗] Limit harian kamu telah habis, silahkan beli Premium melalui *${usedPrefix}premium*`, m)
-                    continue // Limit habis
+                // Normalize and enforce limit requirement strictly
+                const requiredLimit = !isPrems
+                    ? (plugin.limit === true ? 1 : Number(plugin.limit) || 0)
+                    : 0
+                if (requiredLimit > 0) {
+                    const currentLimit = Number(global.db.data.users[m.sender].limit || 0)
+                    if (currentLimit < requiredLimit) {
+                        this.reply(m.chat, "Limit kamu kurang,\nketik `.premium` untuk membeli Role Premium", m)
+                        continue // Block execution when user doesn't have enough limit
+                    }
                 }
                 if (plugin.level > _user.level) {
                     this.reply(m.chat, `[💬] Diperlukan level ${plugin.level} untuk menggunakan perintah ini\n*Level mu:* ${_user.level} 📊`, m)
@@ -310,8 +318,11 @@ export async function handler(chatUpdate) {
                 }
                 try {
                     await plugin.call(this, m, extra)
-                    if (!isPrems)
-                        m.limit = m.limit || plugin.limit || false
+                    if (!isPrems) {
+                        // Always store numeric limit cost for safe deduction later
+                        const cost = plugin.limit === true ? 1 : Number(plugin.limit) || 0
+                        m.limit = Number(m.limit) || cost
+                    }
                 } catch (e) {
                     // Error occured
                     m.error = e
@@ -349,8 +360,9 @@ export async function handler(chatUpdate) {
         let user, stats = global.db.data.stats
         if (m) {
             if (m.sender && (user = global.db.data.users[m.sender])) {
-                user.exp += m.exp
-                user.limit -= m.limit * 1
+                user.exp += Number(m.exp) || 0
+                user.limit -= Number(m.limit) || 0
+                if (user.limit < 0) user.limit = 0
             }
             let stat
             if (m.plugin) {
@@ -387,7 +399,7 @@ export async function handler(chatUpdate) {
 }
 /**
  * Handle groups participants update
- * @param {import('@whiskeysocket/baileys').BaileysEventMap<unknown>['group-participants.update']} groupsUpdate
+ * @param {import('@whiskeysockets/baileys').BaileysEventMap<unknown>['group-participants.update']} groupsUpdate
  */
 export async function participantsUpdate({ id, participants, action, simulate = false }) {
     if (opts['self']) return
@@ -403,7 +415,7 @@ export async function participantsUpdate({ id, participants, action, simulate = 
             if (chat.welcome) {
                 let groupMetadata = (conn.chats[id] || {}).metadata || await this.groupMetadata(id)
                 for (let user of participants) {
-                if(action === 'add') await delay(1000)
+                    if (action === 'add') await delay(1000)
                     const userJid = await this.getJid(user, id)
                     let pp;
                     try {
@@ -451,7 +463,7 @@ export async function participantsUpdate({ id, participants, action, simulate = 
 
 /**
  * Handler groups update
- * @param {import('@whiskeysocket/baileys').BaileysEventMap<unknown>['groups.update']} groupsUpdate
+ * @param {import('@whiskeysockets/baileys').BaileysEventMap<unknown>['groups.update']} groupsUpdate
  */
 export async function groupsUpdate(groupsUpdate) {
     if (opts['self']) return
