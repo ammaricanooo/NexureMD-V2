@@ -1,5 +1,5 @@
 import { webp2png } from '../lib/webp2mp4.js'
-import { S_WHATSAPP_NET } from '@whiskeysocket/baileys'
+import { S_WHATSAPP_NET } from '@whiskeysockets/baileys'
 
 let handler = async (m, { conn, args }) => {
   let q = m.quoted || m;
@@ -10,7 +10,7 @@ let handler = async (m, { conn, args }) => {
       tag: 'iq',
       attrs: { to: S_WHATSAPP_NET, type: 'set', xmlns: 'w:profile:picture' },
       content: [{ tag: 'picture', attrs: { type: 'image' }, content: imageBuffer }]
-    }).then(m.reply('Success')) 
+    }).then(m.reply('Success'))
 };
 
   if (/image/.test(mime)) {

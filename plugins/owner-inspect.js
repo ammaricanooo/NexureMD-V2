@@ -1,5 +1,5 @@
 import util from 'util'
-import { jidDecode } from '@whiskeysocket/baileys'
+import { jidDecode } from '@whiskeysockets/baileys'
 
 export const handler = async (m, { conn, usedPrefix, command }) => {
   try {

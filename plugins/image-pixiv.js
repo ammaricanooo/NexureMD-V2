@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
 import sharp from 'sharp'
-import pkg from '@whiskeysocket/baileys'
+import pkg from '@whiskeysockets/baileys'
 const { generateWAMessageContent, generateWAMessageFromContent, proto } = pkg
 
 const handler = async (m, { usedPrefix, command, conn, args }) => {
@@ -23,7 +23,7 @@ const handler = async (m, { usedPrefix, command, conn, args }) => {
     } else {
       pageLink = `https://www.pixiv.net/search.php?s_mode=s_tag&word=${encodeURIComponent(args.join(' '))}`;
     }
-    
+
     const caption = data.caption || '';
     const artist = data.artist || '';
     const tags = data.tags ? data.tags.join(', ') : '';

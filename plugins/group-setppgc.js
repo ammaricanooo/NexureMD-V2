@@ -1,5 +1,5 @@
 import { webp2png } from '../lib/webp2mp4.js'
-import { S_WHATSAPP_NET } from '@whiskeysocket/baileys'
+import { S_WHATSAPP_NET } from '@whiskeysockets/baileys'
 
 let handler = async (m, { conn, args }) => {
   let q = m.quoted || m;
@@ -34,7 +34,7 @@ export default handler;
 
 async function generateProfilePicture(mediaUpload) {
   let bufferOrFilePath;
-  
+
   if (Buffer.isBuffer(mediaUpload)) {
     bufferOrFilePath = mediaUpload;
   } else if (typeof mediaUpload === 'object' && 'url' in mediaUpload) {
