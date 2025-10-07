@@ -1,5 +1,5 @@
 import fetch from 'node-fetch'
-import { ryzenCDN } from '../lib/uploadFile.js'
+import { nexureCDN } from '../lib/uploadFile.js'
 
 let handler = async (m) => {
   try {
@@ -9,9 +9,9 @@ let handler = async (m) => {
 
     let media = await q.download();
 
-    let link = await ryzenCDN(media);
+    let link = await nexureCDN(media);
     if (!link) throw 'Failed to upload media';
-    let fileUrl = typeof link === 'object' ? link.url : link;
+    let fileUrl = typeof link === 'object' ? link.result.url : link;
 
     let caption = `📮 *L I N K :*
 ${fileUrl}

@@ -10,7 +10,7 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
     const isDouyin = args[0].includes("douyin")
     const API = isDouyin
       ? `${APIs.ryzumi}/api/downloader/v2/ttdl?url=${args[0]}`
-      : `${APIs.ryzumi}/api/downloader/ttdl?url=${args[0]}`
+      : `${APIs.ammaricano}/api/download/tiktok?url=${args[0]}`
 
     const { data: response } = await axios.get(API)
     let videoData, videoURL, videoURLWatermark, hdURL, info
@@ -28,7 +28,7 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
       const authorId = author.unique_id || author.short_id || "unknown"
       info = `Judul: ${videoData.desc}\nUpload: ${uploadTime}\n\nUploader: ${author.nickname || "unknown"}\n(${authorId} - https://www.douyin.com/user/${authorId})\nSound: ${videoData.music.author}\n`
     } else {
-      videoData = response.data?.data
+      videoData = response.result
       if (!videoData) throw "Gagal mendownload video TikTok!"
       hdURL = videoData.hdplay
       videoURL = args[1] === "hd" && hdURL ? hdURL : videoData.play

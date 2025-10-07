@@ -267,10 +267,10 @@ export async function handler(chatUpdate) {
                     fail('private', m, this)
                     continue
                 }
-                if (plugin.register == true && _user.registered == false) { // Butuh daftar?
-                    fail('unreg', m, this)
-                    continue
-                }
+                // if (plugin.register == true && _user.registered == false) { // Butuh daftar?
+                //     fail('unreg', m, this)
+                //     continue
+                // }
                 m.isCommand = true
                 let xp = 'exp' in plugin ? parseInt(plugin.exp) : 17 // XP Earning per command
                 if (xp > 200)
