@@ -42,7 +42,6 @@ const {
   useMultiFileAuthState,
   DisconnectReason,
   fetchLatestBaileysVersion,
-  makeInMemoryStore,
   jidNormalizedUser,
   makeCacheableSignalKeyStore
 } = await import('@whiskeysockets/baileys')
@@ -60,7 +59,7 @@ global.API = (name, path = '/', query = {}, apikeyqueryname) => (name in global.
 const __dirname = global.__dirname(import.meta.url)
 
 global.opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse())
-global.prefix = new RegExp('^[' + (opts['prefix'] || '/!#$%+£¢€¥^°=¶∆×÷π√✓©®:;?&.\\-').replace(/[|\\{}()[\]^$+*?.\-\^]/g, '\\$&') + ']')
+global.prefix = new RegExp('^[' + (opts['prefix'] || '‎xzXZ/i!#$%+£¢€¥^°=¶∆×÷π√✓©®:;?&.\\-').replace(/[|\\{}()[\]^$+*?.\-\^]/g, '\\$&') + ']')
 global.db = new Low(new JSONFile(`database.json`));
 
 global.loadDatabase = async function loadDatabase() {
@@ -86,10 +85,22 @@ global.loadDatabase = async function loadDatabase() {
 }
 loadDatabase()
 
+// Fetch and use the latest WhatsApp Web version from Baileys
+const { version: waVersion, isLatest } = await fetchLatestBaileysVersion().catch(err => {
+  console.error('Failed to fetch latest Baileys version:', err)
+  return { version: undefined, isLatest: false }
+})
+if (waVersion) {
+  const verStr = waVersion.join('.')
+  console.log(chalk.cyan(`Using WhatsApp Web version: v${verStr} (${isLatest ? 'latest' : 'not latest'})`))
+}
+
 const { state, saveCreds } = await useMultiFileAuthState('./sessions')
 const connectionOptions = {
   logger: pino({ level: 'fatal' }),
-  browser: ['Mac OS', 'safari', '5.1.10'],
+  browser: ["Ubuntu", "Chrome", "20.0.00"],
+  // ensure WA connection targets the correct web version from Baileys
+  ...(waVersion ? { version: [2, 3000, 1027934701] } : {}),
   auth: {
     creds: state.creds,
     keys: makeCacheableSignalKeyStore(state.keys, pino().child({

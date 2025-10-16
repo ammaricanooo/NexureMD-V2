@@ -25,21 +25,21 @@
         "MD",
         "baileys-md"
     ],
-    "homepage": "https://github.com/ShirokamiRyzenRyzumiMD-ESM",
+    "homepage": "https://github.com/ammaricano/NexureMD-ESM",
     "author": {
-        "name": "ShirokamiRyzen"
+        "name": "ammaricano/"
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/ShirokamiRyzenRyzumiMD-ESM.git"
+        "url": "git+https://github.com/ammaricano/NexureMD-ESM.git"
     },
     "bugs": {
-        "url": "https://github.com/ShirokamiRyzenRyzumiMD-ESM/issues"
+        "url": "https://github.com/ammaricano/NexureMD-ESM/issues"
     },
     "license": "GPL-3.0-or-later",
     "dependencies": {
         "@vitalets/google-translate-api": "^9.2.0",
-        "@whiskeysockets/baileys": "^6.7.19",
+        "@whiskeysockets/baileys": "^7.0.0-rc.3",
         "awesome-phonenumber": "^3.4.0",
         "axios": "^1.4.0",
         "cfonts": "^2.10.0",

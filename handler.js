@@ -129,8 +129,17 @@ export async function handler(chatUpdate) {
         let _user = global.db.data && global.db.data.users && global.db.data.users[m.sender]
         const groupMetadata = (m.isGroup ? ((conn.chats[m.chat] || {}).metadata || await this.groupMetadata(m.chat).catch(_ => null)) : {}) || {}
         const participants = (m.isGroup ? groupMetadata.participants : []) || []
-        const user = (m.isGroup ? participants.find(u => (u.id === m.sender) || (u.jid === m.sender)) : {}) || {} // User Data
-        const bot = (m.isGroup ? participants.find(u => (u.id === this.user.jid) || (u.jid === this.user.jid)) : {}) || {} // Your Data
+        const user = (m.isGroup ? participants.find(u => {
+            const jid = conn.getJid(String(u.id || u.jid || '').decodeJid())
+            const pn = u.phoneNumber ? (String(u.phoneNumber).replace(/[^0-9]/g, '') + '@s.whatsapp.net') : null
+            return jid === m.sender || pn === m.sender
+        }) : {}) || {} // User Data
+        const bot = (m.isGroup ? participants.find(u => {
+            const jid = conn.getJid(String(u.id || u.jid || '').decodeJid())
+            const pn = u.phoneNumber ? (String(u.phoneNumber).replace(/[^0-9]/g, '') + '@s.whatsapp.net') : null
+            const selfJid = this.user.jid
+            return jid === selfJid || pn === selfJid
+        }) : {}) || {} // Your Data
         const isRAdmin = user?.admin == 'superadmin' || false
         const isAdmin = isRAdmin || user?.admin == 'admin' || false // Is User Admin?
         const isBotAdmin = bot?.admin || false // Are you Admin?
@@ -267,10 +276,10 @@ export async function handler(chatUpdate) {
                     fail('private', m, this)
                     continue
                 }
-                // if (plugin.register == true && _user.registered == false) { // Butuh daftar?
-                //     fail('unreg', m, this)
-                //     continue
-                // }
+                if (plugin.register == true && _user.registered == false) { // Butuh daftar?
+                    fail('unreg', m, this)
+                    continue
+                }
                 m.isCommand = true
                 let xp = 'exp' in plugin ? parseInt(plugin.exp) : 17 // XP Earning per command
                 if (xp > 200)
@@ -416,33 +425,42 @@ export async function participantsUpdate({ id, participants, action, simulate = 
                 let groupMetadata = (conn.chats[id] || {}).metadata || await this.groupMetadata(id)
                 for (let user of participants) {
                     if (action === 'add') await delay(1000)
-                    const userJid = await this.getJid(user, id)
+                    // Normalize the participant JID (strip device suffix/LID)
+                    let userJid = this.getJid(String(user).decodeJid()) || String(user).decodeJid()
+                    // Fetch avatar; if upload fails, keep a safe default URL
                     let pp;
                     try {
-                        let pps = await this.profilePictureUrl(userJid, 'image').catch(_ => 'https://telegra.ph/file/24fa902ead26340f3df2c.png')
-                        let ppB = await (await fetch(pps)).buffer()
-                        if (ppB) pp = await uploadPomf(ppB)
-                    } finally {
-                        const username = await this.getName(userJid)
-                        const gcname = groupMetadata.subject || 'Unknown'
-                        const gcMem = groupMetadata.participants?.length || 0
-                        const welcomeBg = 'https://telegra.ph/file/666ccbfc3201704454ba5.jpg'
-                        const leaveBg = 'https://telegra.ph/file/0db212539fe8a014017e3.jpg'
+                        const pps = await this.profilePictureUrl(userJid, 'image').catch(_ => 'https://telegra.ph/file/24fa902ead26340f3df2c.png')
+                        const ppB = Buffer.from(await (await fetch(pps)).arrayBuffer())
+                        if (ppB?.length) pp = await uploadPomf(ppB).catch(() => pps)
+                    } catch { /* ignore */ }
 
-                        text = (action === 'add' ? (chat.sWelcome || this.welcome || 'Welcome, @user!').replace('@subject', gcname).replace('@desc', groupMetadata.desc || '')
-                            : (chat.sBye || this.bye || 'Bye, @user!')).replace('@user', '@' + userJid.split('@')[0])
-
-                        const wel = `${APIs.ryzumi}/api/image/welcome?username=${username}&group=${gcname}&avatar=${pp}&bg=${welcomeBg}&member=${gcMem}`
-                        const lea = `${APIs.ryzumi}/api/image/leave?username=${username}&group=${gcname}&avatar=${pp}&bg=${leaveBg}&member=${gcMem}`
-
-                        this.sendMessage(id, {
-                            image: { url: action === 'add' ? wel : lea },
-                            caption: text,
-                            contextInfo: {
-                                mentionedJid: [userJid]
-                            },
-                        })
+                    const safeName = async () => {
+                        try {
+                            const nm = await Promise.resolve(this.getName(userJid))
+                            return (nm && String(nm).trim()) || null
+                        } catch { return null }
                     }
+                    const username = (await safeName()) || userJid.split('@')[0]
+                    const gcname = groupMetadata.subject || 'Unknown'
+                    const gcMem = groupMetadata.participants?.length || 0
+                    const welcomeBg = 'https://telegra.ph/file/666ccbfc3201704454ba5.jpg'
+                    const leaveBg = 'https://telegra.ph/file/0db212539fe8a014017e3.jpg'
+
+                    text = (action === 'add' ? (chat.sWelcome || this.welcome || 'Welcome, @user!').replace('@subject', gcname).replace('@desc', groupMetadata.desc || '')
+                        : (chat.sBye || this.bye || 'Bye, @user!')).replace('@user', '@' + (userJid.split('@')[0] || username))
+
+                    // Encode all URL params to avoid breaking when name/desc has spaces or emojis
+                    const wel = `${APIs.ryzumi}/api/image/welcome?username=${encodeURIComponent(username)}&group=${encodeURIComponent(gcname)}&avatar=${encodeURIComponent(pp || '')}&bg=${encodeURIComponent(welcomeBg)}&member=${gcMem}`
+                    const lea = `${APIs.ryzumi}/api/image/leave?username=${encodeURIComponent(username)}&group=${encodeURIComponent(gcname)}&avatar=${encodeURIComponent(pp || '')}&bg=${encodeURIComponent(leaveBg)}&member=${gcMem}`
+
+                    await this.sendMessage(id, {
+                        image: { url: action === 'add' ? wel : lea },
+                        caption: text,
+                        contextInfo: {
+                            mentionedJid: [userJid]
+                        },
+                    })
                 }
             }
             break
