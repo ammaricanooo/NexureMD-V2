@@ -37,7 +37,7 @@ export async function handler(chatUpdate) {
                 global.db.data.users[m.sender] = {}
             if (user) {
                 if (!isNumber(user.exp)) user.exp = 0
-                if (!isNumber(user.limit)) user.limit = 25
+                if (!isNumber(user.limit)) user.limit = 250
                 if (!isNumber(user.afk)) user.afk = -1
                 if (!('afkReason' in user)) user.afkReason = ''
                 if (!('banned' in user)) user.banned = false
@@ -46,7 +46,7 @@ export async function handler(chatUpdate) {
                     registered: false,
                     role: 'Free user',
                     exp: 0,
-                    limit: 25,
+                    limit: 250,
                     afk: -1,
                     afkReason: '',
                     banned: false,
@@ -276,10 +276,10 @@ export async function handler(chatUpdate) {
                     fail('private', m, this)
                     continue
                 }
-                if (plugin.register == true && _user.registered == false) { // Butuh daftar?
-                    fail('unreg', m, this)
-                    continue
-                }
+                // if (plugin.register == true && _user.registered == false) { // Butuh daftar?
+                //     fail('unreg', m, this)
+                //     continue
+                // }
                 m.isCommand = true
                 let xp = 'exp' in plugin ? parseInt(plugin.exp) : 17 // XP Earning per command
                 if (xp > 200)
